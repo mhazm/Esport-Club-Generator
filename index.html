@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lua Data Generator</title>
+    <link href="output.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="js/translations.js"></script>
+</head>
+<body class="bg-gray-100 dark:bg-dark-200 min-h-screen flex flex-col">
+    <!-- Header/Navbar -->
+    <header class="bg-white dark:bg-dark-100 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="text-xl font-bold text-gray-800 dark:text-white" data-translate="appTitle">Esports Club Data Generator</div>
+                
+                <nav class="hidden md:flex space-x-1">
+                    <a href="#" class="nav-link active dark:text-white" data-section="player" data-translate="playerGenerator">
+                        <i class="fas fa-user mr-2"></i>Player Generator
+                    </a>
+                    <a href="#" class="nav-link dark:text-white" data-section="team" data-translate="teamGenerator">
+                        <i class="fas fa-users mr-2"></i>Team Generator
+                    </a>
+                    <a href="#" class="nav-link dark:text-white" data-section="hero" data-translate="heroGenerator">
+                        <i class="fas fa-mask mr-2"></i>Hero Generator
+                    </a>
+                </nav>
+                
+                <div class="flex items-center space-x-4">
+                    <select id="language-selector" class="form-select !w-auto !py-1 !text-sm">
+                        <option value="en">English</option>
+                        <option value="id">Indonesia</option>
+                        <option value="cn">中国（简体）</option>
+                    </select>
+
+                    <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
+                        <!-- Ikon bulan (dark mode) -->
+                        <i id="theme-icon-dark" class="fas fa-moon text-gray-800 dark:text-white"></i>
+                        <!-- Ikon matahari (light mode) -->
+                        <i id="theme-icon-light" class="fas fa-sun text-gray-800 dark:text-white hidden"></i>
+                    </button>
+                    
+                    <button class="md:hidden p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" id="mobile-menu-button">
+                        <i class="fas fa-bars text-gray-800 dark:text-white"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Mobile menu -->
+            <div id="mobile-menu" class="md:hidden hidden pb-4">
+                <div class="flex flex-col space-y-2">
+                    <a href="#" class="nav-link active dark:text-white" data-section="player" data-translate="playerGenerator">
+                        <i class="fas fa-user mr-2"></i>Player Generator
+                    </a>
+                    <a href="#" class="nav-link dark:text-white" data-section="team" data-translate="teamGenerator">
+                        <i class="fas fa-users mr-2"></i>Team Generator
+                    </a>
+                    <a href="#" class="nav-link dark:text-white" data-section="hero" data-translate="heroGenerator">
+                        <i class="fas fa-mask mr-2"></i>Hero Generator
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto px-4 py-8 flex-1 w-full">
+        <!-- Player Generator Section -->
+        <section id="player-section">
+            <div class="bg-white dark:bg-dark-100 rounded-lg shadow-md p-6">
+                <h1 class="text-3xl font-bold text-center text-gray-800 dark:text-white mb-8" data-translate="playerGenerator">Player Generator</h1>
+                
+                <div id="forms-container" class="space-y-4">
+                    <!-- Form player akan ditambahkan di sini -->
+                </div>
+                
+                <div class="flex justify-between mt-6">
+                    <button onclick="addPlayerForm()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition" data-translate="addPlayer">
+                        <i class="fas fa-user-plus mr-2"></i>Tambah Pemain
+                    </button>
+                    <button onclick="generateLuaCode()" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition" data-translate="generate">
+                        <i class="fas fa-cog mr-2"></i>Generate Code
+                    </button>
+                </div>
+                
+                <div id="lua-result" class="mt-6 bg-gray-50 dark:bg-gray-800 p-4 border-l-4 border-green-500 font-mono whitespace-pre-wrap hidden text-gray-800 dark:text-gray-200"></div>
+            </div>
+        </section>
+        
+        <!-- Team Generator Section -->
+        <section id="team-section" class="hidden">
+            <div class="bg-white dark:bg-dark-100 rounded-lg shadow-md p-6">
+                <h1 class="text-3xl font-bold text-center text-gray-800 dark:text-white mb-8" data-translate="teamGenerator">Team Generator</h1>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label for="teamId" class="form-label" data-translate="teamId">Team ID</label>
+                        <input type="number" id="teamId" class="form-input" value="1">
+                    </div>
+                    
+                    <div>
+                        <label for="teamName" class="form-label" data-translate="teamName">Team Name</label>
+                        <input type="text" id="teamName" class="form-input" placeholder="Enter team name">
+                    </div>
+                    
+                    <div>
+                        <label for="teamNation" class="form-label" data-translate="nation">Nation</label>
+                        <select id="teamNation" onchange="updateTeamRegion()" class="form-select">
+                            <!-- Opsi akan diisi oleh JavaScript -->
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="teamRegion" class="form-label" data-translate="region">Region (Capital)</label>
+                        <input type="text" id="teamRegion" readonly class="form-input">
+                    </div>
+                    
+                    <div class="flex space-x-3">
+                        <button onclick="generateTeam()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition" data-translate="generate">
+                            <i class="fas fa-cog mr-2"></i>Generate
+                        </button>
+                        <button onclick="copyTeamOutput()" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition" data-translate="copy">
+                            <i class="fas fa-copy mr-2"></i>Copy Output
+                        </button>
+                    </div>
+                    
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-800 dark:text-white mb-2">Output</h3>
+                        <pre id="team-output" class="bg-gray-50 dark:bg-gray-800 p-4 border-l-4 border-green-500 font-mono whitespace-pre-wrap text-gray-800 dark:text-gray-200"></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Hero Generator Section -->
+        <section id="hero-section" class="hidden">
+            <div class="bg-white dark:bg-dark-100 rounded-lg shadow-md p-6">
+                <h1 class="text-3xl font-bold text-center text-gray-800 dark:text-white mb-8" data-translate="heroGenerator">Hero Generator</h1>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label for="heroId" class="form-label" data-translate="heroId">Hero ID</label>
+                        <input type="number" id="heroId" class="form-input">
+                    </div>
+                    
+                    <div>
+                        <label for="heroName" class="form-label" data-translate="heroName">Hero Name</label>
+                        <input type="text" id="heroName" class="form-input">
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="baseHP" class="form-label" data-translate="baseHp">Base HP (Level 1)</label>
+                            <input type="number" id="baseHP" class="form-input">
+                        </div>
+                        <div>
+                            <label for="baseATK" class="form-label" data-translate="baseATK">Base ATK (Level 1)</label>
+                            <input type="number" id="baseATK" class="form-input">
+                        </div>
+                        <div>
+                            <label for="growthHP" class="form-label" data-translate="growthHP">Growth HP per Level</label>
+                            <input type="number" id="growthHP" class="form-input">
+                        </div>
+                        <div>
+                            <label for="growthATK" class="form-label" data-translate="growthATK">Growth ATK per Level</label>
+                            <input type="number" id="growthATK" class="form-input">
+                        </div>
+                        <div>
+                            <label for="defenseAbility" class="form-label" data-translate="durability">Durability</label>
+                            <input type="number" id="defenseAbility" class="form-input">
+                        </div>
+                        <div>
+                            <label for="offenseAbility" class="form-label" data-translate="offense">Offense</label>
+                            <input type="number" id="offenseAbility" class="form-input">
+                        </div>
+                        <div>
+                            <label for="playDifficulty" class="form-label" data-translate="playDifficulty">Play Difficulty (1-10)</label>
+                            <input type="number" id="playDifficulty" min="1" max="10" class="form-input">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="role" class="form-label" data-translate="role">Role</label>
+                        <select id="role" class="form-select" multiple>
+                            <option value="Fighters">Fighters</option>
+                            <option value="Master">Master</option>
+                            <option value="Shooter">Shooter</option>
+                            <option value="Assassin">Assassin</option>
+                            <option value="Tank">Tank</option>
+                            <option value="Support">Support</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="positionLimit" class="form-label" data-translate="positionLimit">Position Limit</label>
+                        <select id="positionLimit" class="form-select" multiple>
+                            <option value="Top">Top</option>
+                            <option value="Jungle">Jungle</option>
+                            <option value="Mid">Mid</option>
+                            <option value="Adc">Adc</option>
+                            <option value="Support">Support</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="strongTerm" class="form-label" data-translate="strongTerm">Strong Term</label>
+                        <select id="strongTerm" class="form-select">
+                            <option value="EarlyTerm">EarlyTerm</option>
+                            <option value="MidTerm">MidTerm</option>
+                            <option value="LateTerm">LateTerm</option>
+                        </select>
+                    </div>
+                    
+                    <div class="flex space-x-3">
+                        <button onclick="generateHeroOutput()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition" data-translate="generate">
+                            <i class="fas fa-cog mr-2"></i> Generate
+                        </button>
+                        <button onclick="copyHeroOutput()" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition" data-translate="copy">
+                            <i class="fas fa-copy mr-2"></i> Copy Output
+                        </button>
+                        <button onclick="clearHeroInputs()" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition" data-translate="delete">
+                            <i class="fas fa-trash-alt mr-2"></i> Clear
+                        </button>
+                    </div>
+                    
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-800 dark:text-white mb-2">Output</h3>
+                        <pre id="hero-output" class="bg-gray-50 dark:bg-gray-800 p-4 border-l-4 border-green-500 font-mono whitespace-pre-wrap text-gray-800 dark:text-gray-200"></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-dark-100 border-t border-gray-200 dark:border-gray-700 mt-auto">
+        <div class="max-w-6xl mx-auto px-4 py-6">
+            <p class="text-center text-gray-600 dark:text-gray-400">
+                Created by DeepSeek AI
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        window.addEventListener('error', function(e) {
+            console.error('JavaScript Error:', e.message, 'at', e.filename, 'line', e.lineno);
+            showModal(getTranslation('jsErr'), getTranslation('jsErrMsg').replace('%message', `${e.message}`));
+        });
+
+        // =====================
+        // Data Negara dan Ibu Kota
+        // =====================
+        const countries = [
+            {code: "AFG", name: "Afghanistan", capital: "Kabul"},
+            {code: "ARG", name: "Argentina", capital: "Buenos Aires"},
+            {code: "AUS", name: "Australia", capital: "Canberra"},
+            {code: "AUT", name: "Austria", capital: "Vienna"},
+            {code: "BEL", name: "Belgium", capital: "Brussels"},
+            {code: "BIH", name: "Bosnia and Herzegovina", capital: "Sarajevo"},
+            {code: "BLR", name: "Belarus", capital: "Minsk"},
+            {code: "BRA", name: "Brazil", capital: "Brasília"},
+            {code: "CAN", name: "Canada", capital: "Ottawa"},
+            {code: "CHI", name: "Chile", capital: "Santiago"},
+            {code: "CHN", name: "China", capital: "Beijing"},
+            {code: "COL", name: "Colombia", capital: "Bogotá"},
+            {code: "CRO", name: "Croatia", capital: "Zagreb"},
+            {code: "CZE", name: "Czech Republic", capital: "Prague"},
+            {code: "DEN", name: "Denmark", capital: "Copenhagen"},
+            {code: "EGY", name: "Egypt", capital: "Cairo"},
+            {code: "ESP", name: "Spain", capital: "Madrid"},
+            {code: "FIN", name: "Finland", capital: "Helsinki"},
+            {code: "FRA", name: "France", capital: "Paris"},
+            {code: "GER", name: "Germany", capital: "Berlin"},
+            {code: "GRE", name: "Greece", capital: "Athens"},
+            {code: "HKG", name: "China Hongkong", capital: "Hong Kong"},
+            {code: "HUN", name: "Hungary", capital: "Budapest"},
+            {code: "IDN", name: "Indonesia", capital: "Jakarta"},
+            {code: "IND", name: "India", capital: "New Delhi"},
+            {code: "IRE", name: "Ireland", capital: "Dublin"},
+            {code: "ISR", name: "Israel", capital: "Jerusalem"},
+            {code: "ITA", name: "Italy", capital: "Rome"},
+            {code: "JOR", name: "Jordan", capital: "Amman"},
+            {code: "JPN", name: "Japan", capital: "Tokyo"},
+            {code: "KAZ", name: "Kazakhstan", capital: "Nur-Sultan"},
+            {code: "KOR", name: "Korea Republic", capital: "Seoul"},
+            {code: "KSA", name: "Saudi Arabia", capital: "Riyadh"},
+            {code: "MEX", name: "Mexico", capital: "Mexico City"},
+            {code: "MGL", name: "Mongolia", capital: "Ulaanbaatar"},
+            {code: "NED", name: "Netherlands", capital: "Amsterdam"},
+            {code: "NOR", name: "Norway", capital: "Oslo"},
+            {code: "NZL", name: "New Zealand", capital: "Wellington"},
+            {code: "PER", name: "Peru", capital: "Lima"},
+            {code: "PHI", name: "Philippines", capital: "Manila"},
+            {code: "POL", name: "Poland", capital: "Warsaw"},
+            {code: "POR", name: "Portugal", capital: "Lisbon"},
+            {code: "PRK", name: "Korea DPR", capital: "Pyongyang"},
+            {code: "ROU", name: "Romania", capital: "Bucharest"},
+            {code: "RSA", name: "South Africa", capital: "Pretoria"},
+            {code: "RUS", name: "Russia", capital: "Moscow"},
+            {code: "SIN", name: "Singapore", capital: "Singapore"},
+            {code: "SUI", name: "Switzerland", capital: "Bern"},
+            {code: "SVK", name: "Slovakia", capital: "Bratislava"},
+            {code: "SWE", name: "Sweden", capital: "Stockholm"},
+            {code: "THA", name: "Thailand", capital: "Bangkok"},
+            {code: "TPE", name: "China Taipei", capital: "Taipei"},
+            {code: "TUN", name: "Tunisia", capital: "Tunis"},
+            {code: "TUR", name: "Turkey", capital: "Ankara"},
+            {code: "UAE", name: "United Arab Emirates", capital: "Abu Dhabi"},
+            {code: "UK", name: "United Kingdom", capital: "London"},
+            {code: "UKR", name: "Ukraine", capital: "Kyiv"},
+            {code: "URU", name: "Uruguay", capital: "Montevideo"},
+            {code: "USA", name: "United States of America", capital: "Washington, D.C."},
+            {code: "VIE", name: "Vietnam", capital: "Hanoi"}
+        ];
+
+        // Modal Dialog Functions
+        function showModal(title, message, confirmCallback = null, iconClass = 'fa-exclamation-circle') {
+            const modal = document.getElementById('modal');
+            const modalTitle = document.getElementById('modal-title-text');
+            const modalIcon = document.getElementById('modal-icon');
+            const modalBody = document.getElementById('modal-body');
+            const modalContainer = document.querySelector('.modal-container');
+            
+            // Set icon and title
+            modalTitle.textContent = title;
+            modalIcon.className = `fas ${iconClass} mr-2`;
+            modalBody.innerHTML = message;
+            
+            // Reset and apply animations
+            modalContainer.classList.remove('animate-pop', 'animate-shake');
+            void modalContainer.offsetWidth; // Trigger reflow
+            modalContainer.classList.add('animate-pop', 'animate-shake');
+            
+            modal.classList.remove('hidden');
+            
+            // Close modal handlers
+            const closeModal = () => {
+                modal.classList.add('hidden');
+                if (confirmCallback) confirmCallback();
+            };
+            
+            document.getElementById('modal-close').onclick = closeModal;
+            document.getElementById('modal-confirm').onclick = closeModal;
+            
+            // Close when clicking outside modal
+            modal.onclick = (e) => {
+                if (e.target === modal) closeModal();
+            };
+        }
+
+        // Contoh penggunaan:
+        // showModal('Error', 'Harap isi semua field yang diperlukan');
+
+        // =====================
+        // Dark Mode & Navigation
+        // =====================
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIconDark = document.getElementById('theme-icon-dark');
+        const themeIconLight = document.getElementById('theme-icon-light');
+        
+        // Set initial theme
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+            themeIconDark.classList.add('hidden');
+            themeIconLight.classList.remove('hidden');
+        } else {
+            document.documentElement.classList.remove('dark');
+            themeIconDark.classList.remove('hidden');
+            themeIconLight.classList.add('hidden');
+        }
+        
+        // Theme toggle
+        themeToggle.addEventListener('click', function() {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('color-theme', 'light');
+                themeIconDark.classList.remove('hidden');
+                themeIconLight.classList.add('hidden');
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('color-theme', 'dark');
+                themeIconDark.classList.add('hidden');
+                themeIconLight.classList.remove('hidden');
+            }
+        });
+        
+        // Mobile Menu Toggle
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        
+        mobileMenuButton.addEventListener('click', function() {
+            mobileMenu.classList.toggle('hidden');
+        });
+        
+        // Navigation between sections
+        const navLinks = document.querySelectorAll('.nav-link');
+        const sections = {
+            player: document.getElementById('player-section'),
+            team: document.getElementById('team-section'),
+            hero: document.getElementById('hero-section')
+        };
+        
+        navLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Update active state
+                navLinks.forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Hide all sections
+                Object.values(sections).forEach(section => {
+                    section.classList.add('hidden');
+                });
+                
+                // Show selected section
+                const section = this.dataset.section;
+                sections[section].classList.remove('hidden');
+                
+                // Close mobile menu if open
+                mobileMenu.classList.add('hidden');
+            });
+        });
+
+        // ===================
+        // Hero Generator Logic
+        // ===================
+        function calculateRoleAbilityValues(roles, def, off, hp, atk, growthHP, growthATK) {
+            return roles.map(role => {
+                let score = 0;
+                switch (role) {
+                    case "Tank":
+                        score = (def + hp / 100 + growthHP / 10) / 3;
+                        break;
+                    case "Shooter":
+                        score = (off + atk / 10 + growthATK / 5) / 3;
+                        break;
+                    case "Assassin":
+                        score = (off + atk / 10 + def / 2) / 3;
+                        break;
+                    case "Fighters":
+                        score = (off + def + (hp + atk) / 100) / 3;
+                        break;
+                    case "Support":
+                        score = (def + hp / 150 + growthHP / 15) / 3;
+                        break;
+                    case "Master":
+                        score = (off + def + atk / 10 + hp / 100) / 4;
+                        break;
+                }
+                return Math.min(10, Math.round(score));
+            });
+        }
+
+        function calculateGoldNeed(roles) {
+            let totalScore = 0;
+            roles.forEach(role => {
+                switch (role) {
+                    case "Shooter": totalScore += 10; break;
+                    case "Assassin": totalScore += 9; break;
+                    case "Master": totalScore += 8; break;
+                    case "Fighters": totalScore += 7; break;
+                    case "Tank": totalScore += 5; break;
+                    case "Support": totalScore += 4; break;
+                }
+            });
+            const avg = totalScore / roles.length;
+            return avg >= 8 ? "High" : avg >= 6 ? "Medium" : "Low";
+        }
+
+        function getSelectedOptions(selectId) {
+            const select = document.getElementById(selectId);
+            return Array.from(select.selectedOptions).map(opt => opt.value);
+        }
+
+        function generateHeroOutput() {
+            // Daftar field yang wajib diisi
+            const requiredFields = [
+                { id: 'heroId', name: 'Hero ID' },
+                { id: 'heroName', name: 'Hero Name' },
+                { id: 'baseHP', name: 'Base HP' },
+                { id: 'baseATK', name: 'Base ATK' },
+                { id: 'growthHP', name: 'Growth HP' },
+                { id: 'growthATK', name: 'Growth ATK' },
+                { id: 'defenseAbility', name: 'Defense Ability' },
+                { id: 'offenseAbility', name: 'Offense Ability' },
+                { id: 'playDifficulty', name: 'Play Difficulty' }
+            ];
+
+            // Cek field yang kosong
+            const emptyFields = requiredFields.filter(field => {
+                const value = document.getElementById(field.id).value.trim();
+                return value === '' || value === null || value === undefined;
+            });
+
+            // Jika ada field yang kosong, tampilkan modal peringatan
+            if (emptyFields.length > 0) {
+                const fieldNames = emptyFields.map(f => `<li>${f.name}</li>`).join('');
+                const translatedMessage = getTranslation('fillData').replace('%fields%', `<ul class="list-disc pl-5 mt-2">${fieldNames}</ul>`);
+                showModal(getTranslation('errorData'), translatedMessage, null, 'fa-exclamation-triangle text-yellow-500');
+                return;
+            }
+
+            const roles = getSelectedOptions('role');
+            const positions = getSelectedOptions('positionLimit');
+
+            // Validasi select multiple     
+            if (roles.length === 0) {
+                showModal(getTranslation('error'), getTranslation('selectRoleErr'), null, 'fa-exclamation-triangle text-yellow-500');
+                return;
+            }
+            
+            if (positions.length === 0) {
+                showModal(getTranslation('error'), getTranslation('selectPositionErr'), null, 'fa-exclamation-triangle text-yellow-500');
+                return;
+            }
+
+            // GENERATE HERO
+            const id = parseInt(document.getElementById('heroId').value);
+            const name = document.getElementById('heroName').value;
+            const baseHP = parseInt(document.getElementById('baseHP').value);
+            const baseATK = parseInt(document.getElementById('baseATK').value);
+            const growthHP = parseInt(document.getElementById('growthHP').value);
+            const growthATK = parseInt(document.getElementById('growthATK').value);
+            const def = parseInt(document.getElementById('defenseAbility').value);
+            const off = parseInt(document.getElementById('offenseAbility').value);
+            const playDifficulty = parseInt(document.getElementById('playDifficulty').value);
+            const strongTerm = document.getElementById('strongTerm').value;
+
+            const roleAbilities = calculateRoleAbilityValues(roles, def, off, baseHP, baseATK, growthHP, growthATK);
+            const goldNeed = calculateGoldNeed(roles);
+
+            // Format output dengan syntax highlighting Lua
+            const output = 
+            `[<span class="lua-number">${id}</span>] = {
+            <span class="lua-key">name</span> = <span class="lua-string">"${name}"</span>,
+            <span class="lua-key">image</span> = <span class="lua-string">"${name.toLowerCase()}.png"</span>,
+            <span class="lua-key">simImage</span> = <span class="lua-string">"SIM_${name.toLowerCase()}.png"</span>,
+            <span class="lua-key">initHP</span> = <span class="lua-number">${baseHP}</span>,
+            <span class="lua-key">addHPLevel</span> = <span class="lua-number">${growthHP}</span>,
+            <span class="lua-key">initATK</span> = <span class="lua-number">${baseATK}</span>,
+            <span class="lua-key">addATKLevel</span> = <span class="lua-number">${growthATK}</span>,
+            <span class="lua-key">keyLevels</span> = {<span class="lua-number">6</span>, <span class="lua-number">12</span>, <span class="lua-number">18</span>},
+            <span class="lua-key">keyLevelsBufferID</span> = {<span class="lua-number">30000</span>, <span class="lua-number">30000</span>, <span class="lua-number">30000</span>},
+            <span class="lua-key">defenseAbility</span> = <span class="lua-number">${def}</span>,
+            <span class="lua-key">offenseAbility</span> = <span class="lua-number">${off}</span>,
+            <span class="lua-key">playDifficulty</span> = <span class="lua-number">${playDifficulty}</span>,
+            <span class="lua-key">role</span> = {${roles.map(r => `<span class="lua-string">"${r}"</span>`).join(', ')}},
+            <span class="lua-key">roleAbility</span> = {${roleAbilities.map(a => `<span class="lua-number">${a}</span>`).join(', ')}},
+            <span class="lua-key">strongTerm</span> = <span class="lua-string">"${strongTerm}"</span>,
+            <span class="lua-key">goldNeed</span> = <span class="lua-string">"${goldNeed}"</span>,
+            <span class="lua-key">partnerChampions</span> = {},
+            <span class="lua-key">partnerChampionsBufferID</span> = {},
+            <span class="lua-key">restraintChampions</span> = {},
+            <span class="lua-key">restraintChampionsBufferID</span> = {},
+            <span class="lua-key">positionLimit</span> = {${positions.map(p => `<span class="lua-string">"${p}"</span>`).join(', ')}}
+            }`;
+
+            const outputElement = document.getElementById('hero-output');
+            outputElement.innerHTML = output; // Gunakan innerHTML bukan textContent
+        }
+
+        function copyHeroOutput() {
+            const outputElement = document.getElementById('hero-output');
+            if (!outputElement.textContent.trim()) {
+                showModal(getTranslation('alert'),
+                getTranslation('noOutput'),
+                null,
+                'fa-exclamation-triangle text-yellow-500');
+                return;
+            }
+            
+            const textToCopy = outputElement.textContent || outputElement.innerText;
+            
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                showModal(getTranslation('done'), getTranslation('outputCopy'), null, 'fa-check');
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                showModal(getTranslation('error'), getTranslation('outputCopyFailed'), null, 'fa-exclamation-triangle text-yellow-500');
+            });
+        }
+
+        function clearHeroInputs() {
+            document.querySelectorAll('#hero-section input').forEach(input => input.value = '');
+            document.querySelectorAll('#hero-section select').forEach(select => {
+                if (select.multiple) {
+                    Array.from(select.options).forEach(option => option.selected = false);
+                } else {
+                    select.selectedIndex = 0;
+                }
+            });
+            document.getElementById('hero-output').textContent = '';
+        }
+
+        // =====================
+        // Player Generator Logic
+        // =====================
+        let playerCount = 0;
+        const positions = ["Top", "Jungle", "Mid", "Adc", "Support"];
+        
+        // Tambahkan form pertama saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', function() {
+            addPlayerForm();
+            updateTeamRegion(); // Inisialisasi region untuk team generator
+            applyTranslations();
+        });
+
+        document.querySelectorAll('i').forEach(icon => {
+            icon.style.display = 'none';
+            icon.offsetHeight; // Trigger reflow
+            icon.style.display = '';
+        });
+        
+        function addPlayerForm() {
+            playerCount++;
+            const formsContainer = document.getElementById('forms-container');
+            
+            const formDiv = document.createElement('div');
+            formDiv.className = 'bg-gray-50 dark:bg-gray-800 p-5 rounded-lg shadow-sm relative';
+            formDiv.id = `player-form-${playerCount}`;
+            
+            formDiv.innerHTML = `
+                <h3 class="text-xl font-semibold mb-4 dark:text-white" data-translate="player">Player ${playerCount}</h3>
+                <button onclick="removePlayerForm(${playerCount})" class="absolute top-4 right-4 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition" data-translate="deletePlayer">
+                    <i class="fas fa-user-minus mr-2"></i>Delete Player
+                </button>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label for="firstName-${playerCount}" data-translate="firstName" class="block text-sm font-medium text-gray-700 dark:text-gray-300">First Name:</label>
+                        <input type="text" id="firstName-${playerCount}" required 
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <label for="lastName-${playerCount}" data-translate="lastName" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Last Name:</label>
+                        <input type="text" id="lastName-${playerCount}" required 
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <label for="nickName-${playerCount}" data-translate="nickname" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nickname:</label>
+                        <input type="text" id="nickName-${playerCount}" required 
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300" data-translate="position">Position:</label>
+                        <div class="grid grid-cols-5 gap-2">
+                            ${positions.map(position => `
+                                <div>
+                                    <input type="radio" id="position-${playerCount}-${position.toLowerCase()}" 
+                                        name="position-${playerCount}" value="${position}" ${position === 'Mid' ? 'checked' : ''}
+                                        class="hidden peer">
+                                    <label for="position-${playerCount}-${position.toLowerCase()}" 
+                                        class="block w-full text-center px-2 py-2 border border-gray-300 dark:border-gray-600 rounded-md cursor-pointer 
+                                        peer-checked:bg-green-500 peer-checked:text-white peer-checked:border-green-600 
+                                        hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white">
+                                        ${position}
+                                    </label>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <label for="birth-${playerCount}" data-translate="birthDate" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Birth Date (YYYY.M.D):</label>
+                        <input type="text" id="birth-${playerCount}" value="1990.1.1" required 
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <label for="nation-${playerCount}" data-translate="nation" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nation:</label>
+                        <select id="nation-${playerCount}" onchange="updateRegion(${playerCount})"
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                            ${countries.map(country => 
+                                `<option value="${country.code}">${country.name} (${country.code})</option>`
+                            ).join('')}
+                        </select>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <label for="region-${playerCount}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 data-translate="region"">Region (Ibu Kota):</label>
+                        <input type="text" id="region-${playerCount}" readonly
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 dark:text-white">
+                    </div>
+                </div>
+            `;
+            
+            formsContainer.appendChild(formDiv);
+            updateRegion(playerCount);
+        }
+        
+        function updateRegion(playerId) {
+            const nationSelect = document.getElementById(`nation-${playerId}`);
+            const regionInput = document.getElementById(`region-${playerId}`);
+            const countryCode = nationSelect.value;
+            
+            const selectedCountry = countries.find(c => c.code === countryCode);
+            if (selectedCountry) {
+                regionInput.value = selectedCountry.capital;
+            }
+        }
+        
+        function removePlayerForm(id) {
+            if (playerCount <= 1) {
+                showModal(
+                    getTranslation('alert'), 
+                    getTranslation('errorMinOnePlayer'), 
+                    null, 
+                    'fa-exclamation-triangle text-yellow-500');
+                return;
+            }
+            
+            const formToRemove = document.getElementById(`player-form-${id}`);
+            formToRemove.remove();
+            
+            // Perbarui nomor player yang tersisa
+            const forms = document.querySelectorAll('#forms-container > div');
+            playerCount = 0;
+            
+            forms.forEach((form, index) => {
+                playerCount++;
+                form.querySelector('h3').textContent = `Player ${playerCount}`;
+                form.id = `player-form-${playerCount}`;
+                form.querySelector('button').setAttribute('onclick', `removePlayerForm(${playerCount})`);
+            });
+        }
+        
+        function getSelectedPosition(playerId) {
+            const selector = document.querySelector(`input[name="position-${playerId}"]:checked`);
+            return selector ? selector.value : "Mid";
+        }
+        
+        function generateLuaCode() {
+            let emptyFields = [];
+
+            for (let i = 1; i <= playerCount; i++) {
+                const playerFields = [
+                    { id: `firstName-${i}`, name: `First Name (Player ${i})` },
+                    { id: `lastName-${i}`, name: `Last Name (Player ${i})` },
+                    { id: `nickName-${i}`, name: `Nickname (Player ${i})` },
+                    { id: `birth-${i}`, name: `Birth Date (Player ${i})` }
+                ];
+                
+                playerFields.forEach(field => {
+                    const element = document.getElementById(field.id);
+                    if (!element) {
+                        console.error(`Element with id ${field.id} not found`);
+                        return;
+                    }
+                    const value = element.value.trim();
+                    if (value === '') {
+                        emptyFields.push(field.name);
+                    }
+                });
+            }
+            
+            if (emptyFields.length > 0) {
+                showModal(
+                    getTranslation("error"), 
+                    getTranslation("fillData").replace('%fields%', `<ul class="list-disc pl-5 mt-2">${emptyFields.join('\n')}</ul>`),
+                    null,
+                    'fa-exclamation-triangle text-yellow-500'
+                );
+                return;
+            }
+
+            // Generate Player
+            let luaCode = '';
+            
+            for (let i = 1; i <= playerCount; i++) {
+                const firstName = document.getElementById(`firstName-${i}`).value;
+                const lastName = document.getElementById(`lastName-${i}`).value;
+                let nickName = document.getElementById(`nickName-${i}`).value;
+                const position = getSelectedPosition(i);
+                const birth = document.getElementById(`birth-${i}`).value;
+                const nation = document.getElementById(`nation-${i}`).value;
+                const region = document.getElementById(`region-${i}`).value;
+                
+                // Format nickName untuk customfigure (lowercase dan ganti spasi dengan underscore)
+                const customFigure = nickName.toLowerCase().replace(/\s+/g, '_') + '.png';
+                
+                luaCode += `[<span class="lua-number">${i}</span>] = {
+        <span class="lua-key">firstName</span> = <span class="lua-string">"${firstName}"</span>,
+        <span class="lua-key">lastName</span> = <span class="lua-string">"${lastName}"</span>,
+        <span class="lua-key">nickName</span> = <span class="lua-string">"${nickName}"</span>,
+        <span class="lua-key">position</span> = <span class="lua-string">"${position}"</span>,
+        <span class="lua-key">birth</span> = <span class="lua-string">"${birth}"</span>,
+        <span class="lua-key">nation</span> = <span class="lua-string">"${nation}"</span>,
+        <span class="lua-key">region</span> = <span class="lua-string">"${region}"</span>,
+        <span class="lua-key">customfigure</span> = <span class="lua-string">"${customFigure}"</span>,
+}
+
+`;
+            }
+            
+            const outputDiv = document.getElementById('lua-result');
+            outputDiv.innerHTML = luaCode;
+            outputDiv.classList.remove('hidden');
+        }
+
+        // ===================
+        // Team Generator Logic
+        // ===================
+        function updateTeamRegion() {
+            const nationSelect = document.getElementById('teamNation');
+            const regionInput = document.getElementById('teamRegion');
+            const countryCode = nationSelect.value;
+            
+            const selectedCountry = countries.find(c => c.code === countryCode);
+            if (selectedCountry) {
+                regionInput.value = selectedCountry.capital;
+            }
+        }
+
+        // Fungsi untuk mengisi dropdown negara
+        function populateCountryDropdowns() {
+            const teamNationSelect = document.getElementById('teamNation');
+            
+            // Kosongkan dropdown terlebih dahulu
+            teamNationSelect.innerHTML = '';
+            
+            // Tambahkan opsi untuk setiap negara
+            countries.forEach(country => {
+                const option = document.createElement('option');
+                option.value = country.code;
+                option.textContent = `${country.name} (${country.code})`;
+                teamNationSelect.appendChild(option);
+            });
+            
+            // Panggil updateTeamRegion untuk mengisi region awal
+            updateTeamRegion();
+        }
+
+        // Panggil fungsi ini saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', function() {
+            addPlayerForm();
+            populateCountryDropdowns(); // Ganti updateTeamRegion() dengan ini
+        });
+
+        function generateTeam() {
+            const requiredFields = [
+                { id: 'teamId', name: 'Team ID' },
+                { id: 'teamName', name: 'Team Name' }
+            ];
+
+            const emptyFields = requiredFields.filter(field => {
+                const value = document.getElementById(field.id).value.trim();
+                return value === '' || value === null || value === undefined;
+            });
+
+            if (emptyFields.length > 0) {
+                const fieldNames = emptyFields.map(f => f.name).join(', ');
+                showModal(
+                    getTranslation('error'),
+                    getTranslation('fillData').replace('%fields%', `<ul class="list-disc pl-5 mt-2">${fieldNames}</ul>`),
+                    null, 
+                    'fa-exclamation-triangle text-yellow-500');
+                return;
+            }
+
+            // Generate Team
+            const teamNameInput = document.getElementById("teamName");
+            const teamName = teamNameInput.value.trim();
+            const outputEl = document.getElementById("team-output");
+
+            const id = parseInt(document.getElementById('teamId').value) || 1;
+            const randomYear = Math.floor(Math.random() * 5) + 2012; // 2012-2016
+            const randomMonth = Math.floor(Math.random() * 12) + 1; // 1-12
+            const founded = `${randomYear}.${randomMonth}`;
+            const nation = document.getElementById('teamNation').value;
+            const region = document.getElementById('teamRegion').value;
+            const figure = teamName.toLowerCase().replace(/\s+/g, "_") + ".png";
+
+            const result = `[<span class="lua-number">${id}</span>] = {
+        <span class="lua-key">name</span> = <span class="lua-string">"${teamName}"</span>,
+        <span class="lua-key">founded</span> = <span class="lua-string">"${founded}"</span>,
+        <span class="lua-key">nation</span> = <span class="lua-string">"${nation}"</span>,
+        <span class="lua-key">region</span> = <span class="lua-string">"${region}"</span>,
+        <span class="lua-key">figure</span> = <span class="lua-string">"${figure}"</span>,
+        <span class="lua-key">playerids</span> = {},
+}`;
+
+            outputEl.innerHTML = result;
+        }
+
+        function copyTeamOutput() {
+            const outputElement = document.getElementById('team-output');
+            if (!outputElement.textContent.trim()) {
+                showModal(
+                    getTranslation('alert'), 
+                    getTranslation('noOutput'),
+                    null,
+                    'fa-exclamation-triangle text-yellow-500'
+                );
+                return;
+            }
+            const range = document.createRange();
+            range.selectNodeContents(outputElement);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showModal(getTranslation('done'), getTranslation('outputCopy'), null, 'fa-check');
+                } else {
+                    showModal(getTranslation('error'), getTranslation('outputCopyFailed'), null, 'fa-exclamation-triangle text-yellow-500');
+                }
+            } catch (err) {
+                showModal(getTranslation('error'), getTranslation('outputCopyError'), null, 'fa-exclamation-triangle text-yellow-500');
+            }
+            selection.removeAllRanges();
+        }
+    </script>
+
+    <!-- Modal Dialog -->
+    <div id="modal" class="modal-overlay hidden">
+        <div class="modal-container animate-pop">
+            <div class="modal-header">
+                <h3 id="modal-title" class="modal-title">
+                    <i id="modal-icon" class="fas fa-exclamation-circle mr-2"></i>
+                    <span id="modal-title-text">Title</span>
+                </h3>
+                <button id="modal-close" class="modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="modal-body" class="modal-body">
+                Message goes here...
+            </div>
+            <div class="modal-footer">
+                <button id="modal-confirm" class="modal-btn-primary">
+                    <i class="fas fa-check mr-2"></i>OK
+                </button>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
